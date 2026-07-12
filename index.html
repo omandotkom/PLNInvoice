@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Generator invoice token listrik PLN — Fansa Digital" />
+    <title>Invoice Generator — Fansa Digital</title>
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">
+        <div class="brand">Fansa Digital</div>
+        <p class="tagline">Generator Invoice Token Listrik PLN</p>
+      </header>
+
+      <main class="main">
+        <section class="card form-card" aria-labelledby="form-title">
+          <h1 id="form-title" class="card-title">Data Invoice</h1>
+          <p class="card-desc">Isi data pelanggan dan token, lalu buat invoice PDF.</p>
+
+          <form id="invoice-form" novalidate>
+            <div class="field">
+              <label for="idPelanggan">ID Pelanggan (IDPEL)</label>
+              <div class="input-row">
+                <input
+                  type="text"
+                  id="idPelanggan"
+                  name="idPelanggan"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  placeholder="11–13 digit"
+                  required
+                />
+                <button
+                  type="button"
+                  class="btn-paste"
+                  data-paste-target="idPelanggan"
+                  title="Tempel dari clipboard"
+                  aria-label="Tempel ID Pelanggan"
+                >
+                  <svg class="icon-paste" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path
+                      fill="currentColor"
+                      d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v2h10V5h2v14z"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <p class="field-error" id="error-idPelanggan" hidden></p>
+            </div>
+
+            <div class="field">
+              <label for="nama">Nama Pelanggan</label>
+              <div class="input-row">
+                <input
+                  type="text"
+                  id="nama"
+                  name="nama"
+                  autocomplete="name"
+                  placeholder="Contoh: Budi Santoso"
+                  required
+                />
+                <button
+                  type="button"
+                  class="btn-paste"
+                  data-paste-target="nama"
+                  title="Tempel dari clipboard"
+                  aria-label="Tempel Nama Pelanggan"
+                >
+                  <svg class="icon-paste" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path
+                      fill="currentColor"
+                      d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v2h10V5h2v14z"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <p class="field-error" id="error-nama" hidden></p>
+            </div>
+
+            <div class="field">
+              <label for="nomorToken">Nomor Token</label>
+              <div class="input-row">
+                <input
+                  type="text"
+                  id="nomorToken"
+                  name="nomorToken"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  placeholder="Nomor token listrik"
+                  required
+                />
+                <button
+                  type="button"
+                  class="btn-paste"
+                  data-paste-target="nomorToken"
+                  title="Tempel dari clipboard"
+                  aria-label="Tempel Nomor Token"
+                >
+                  <svg class="icon-paste" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path
+                      fill="currentColor"
+                      d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v2h10V5h2v14z"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <p class="field-error" id="error-nomorToken" hidden></p>
+            </div>
+
+            <div class="field">
+              <label for="nominal">Nominal Token</label>
+              <div class="input-row">
+                <div class="input-prefix">
+                  <span class="prefix" aria-hidden="true">Rp</span>
+                  <input
+                    type="text"
+                    id="nominal"
+                    name="nominal"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    placeholder="50.000"
+                    required
+                  />
+                </div>
+                <button
+                  type="button"
+                  class="btn-paste"
+                  data-paste-target="nominal"
+                  data-money="true"
+                  title="Tempel dari clipboard"
+                  aria-label="Tempel Nominal Token"
+                >
+                  <svg class="icon-paste" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path
+                      fill="currentColor"
+                      d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v2h10V5h2v14z"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div
+                class="chip-row"
+                data-chip-for="nominal"
+                role="group"
+                aria-label="Pilih nominal cepat"
+              >
+                <button type="button" class="chip" data-value="20000">20rb</button>
+                <button type="button" class="chip" data-value="50000">50rb</button>
+                <button type="button" class="chip" data-value="100000">100rb</button>
+                <button type="button" class="chip" data-value="200000">200rb</button>
+                <button type="button" class="chip" data-value="500000">500rb</button>
+                <button type="button" class="chip" data-value="1000000">1jt</button>
+              </div>
+              <p class="field-hint">Di invoice menjadi: Token PLN [nominal]</p>
+              <p class="field-error" id="error-nominal" hidden></p>
+            </div>
+
+            <div class="field">
+              <label for="harga">Harga</label>
+              <div class="input-row">
+                <div class="input-prefix">
+                  <span class="prefix" aria-hidden="true">Rp</span>
+                  <input
+                    type="text"
+                    id="harga"
+                    name="harga"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    placeholder="52.000"
+                    required
+                  />
+                </div>
+                <button
+                  type="button"
+                  class="btn-paste"
+                  data-paste-target="harga"
+                  data-money="true"
+                  title="Tempel dari clipboard"
+                  aria-label="Tempel Harga"
+                >
+                  <svg class="icon-paste" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path
+                      fill="currentColor"
+                      d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v2h10V5h2v14z"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div
+                class="chip-row"
+                data-chip-for="harga"
+                role="group"
+                aria-label="Pilih harga cepat"
+              >
+                <button type="button" class="chip" data-value="20000">20rb</button>
+                <button type="button" class="chip" data-value="50000">50rb</button>
+                <button type="button" class="chip" data-value="100000">100rb</button>
+                <button type="button" class="chip" data-value="200000">200rb</button>
+                <button type="button" class="chip" data-value="500000">500rb</button>
+                <button type="button" class="chip" data-value="1000000">1jt</button>
+              </div>
+              <p class="field-hint">Harga jual (bisa berbeda dari nominal token)</p>
+              <p class="field-error" id="error-harga" hidden></p>
+            </div>
+
+            <div class="field">
+              <label for="part">Part</label>
+              <div class="input-row">
+                <input
+                  type="text"
+                  id="part"
+                  name="part"
+                  autocomplete="off"
+                  placeholder="1/2"
+                />
+                <button
+                  type="button"
+                  class="btn-paste"
+                  data-paste-target="part"
+                  title="Tempel dari clipboard"
+                  aria-label="Tempel Part"
+                >
+                  <svg class="icon-paste" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path
+                      fill="currentColor"
+                      d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v2h10V5h2v14z"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <p class="field-hint">Opsional — mis. 1/2 = invoice 1 dari 2</p>
+              <p class="field-error" id="error-part" hidden></p>
+            </div>
+
+            <p class="form-error" id="form-error" hidden role="alert"></p>
+
+            <div class="actions">
+              <button type="submit" class="btn btn-primary" id="btn-generate">
+                Buat Invoice
+              </button>
+              <button type="button" class="btn btn-secondary" id="btn-redownload" hidden>
+                Unduh ulang
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card preview-card" id="preview-section" hidden aria-labelledby="preview-title">
+          <div class="preview-header">
+            <h2 id="preview-title" class="card-title">Preview Invoice</h2>
+            <p class="card-desc" id="preview-filename"></p>
+          </div>
+          <div class="preview-frame-wrap">
+            <iframe
+              id="preview-frame"
+              title="Preview PDF invoice"
+              class="preview-frame"
+            ></iframe>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <span>Fansa Digital</span>
+      </footer>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

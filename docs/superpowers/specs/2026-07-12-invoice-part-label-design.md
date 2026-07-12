@@ -1,7 +1,7 @@
 # Design: Label Part Invoice (mis. 1/2)
 
 **Date:** 2026-07-12  
-**Status:** Approved (pending user review of this written spec)  
+**Status:** Approved — implemented  
 **Parent:** `2026-07-12-invoice-generator-design.md`  
 **Scope:** Additive feature on existing Fansa Digital invoice generator
 
