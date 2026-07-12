@@ -10,6 +10,7 @@
     "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
+    "pdfjs-dist": "^4.10.38",
     "pdfmake": "^0.2.20"
   },
   "devDependencies": {

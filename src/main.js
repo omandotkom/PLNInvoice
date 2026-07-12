@@ -16,12 +16,30 @@ let lastFilename = null;
 const form = /** @type {HTMLFormElement} */ (document.getElementById('invoice-form'));
 const btnGenerate = /** @type {HTMLButtonElement} */ (document.getElementById('btn-generate'));
 const btnRedownload = /** @type {HTMLButtonElement} */ (document.getElementById('btn-redownload'));
+const btnReset = /** @type {HTMLButtonElement} */ (document.getElementById('btn-reset'));
 const formError = /** @type {HTMLElement} */ (document.getElementById('form-error'));
 const previewSection = /** @type {HTMLElement} */ (document.getElementById('preview-section'));
+const previewFrameWrap = /** @type {HTMLButtonElement} */ (
+  document.getElementById('preview-frame-wrap')
+);
 const previewFrame = /** @type {HTMLIFrameElement} */ (document.getElementById('preview-frame'));
+const previewImage = /** @type {HTMLImageElement} */ (document.getElementById('preview-image'));
 const previewFilename = /** @type {HTMLElement} */ (document.getElementById('preview-filename'));
+const previewHint = /** @type {HTMLElement} */ (document.getElementById('preview-hint'));
+const previewZoomBadge = /** @type {HTMLElement} */ (document.getElementById('preview-zoom-badge'));
+const lightbox = /** @type {HTMLElement} */ (document.getElementById('invoice-lightbox'));
+const lightboxImage = /** @type {HTMLImageElement} */ (document.getElementById('lightbox-image'));
+const lightboxClose = /** @type {HTMLButtonElement} */ (document.getElementById('lightbox-close'));
 const nominalInput = /** @type {HTMLInputElement} */ (document.getElementById('nominal'));
 const hargaInput = /** @type {HTMLInputElement} */ (document.getElementById('harga'));
+
+const PREVIEW_HINT_EMPTY =
+  'Isi form lalu klik Buat Invoice. Setelah jadi, klik preview untuk layar penuh.';
+const PREVIEW_HINT_READY =
+  'Klik preview untuk membuka invoice layar penuh (siap screenshot).';
+
+/** @type {string | null} */
+let lastPreviewImageUrl = null;
 
 function setGenerating(isGenerating) {
   btnGenerate.disabled = isGenerating;
@@ -33,6 +51,195 @@ function revokePreviousUrl() {
     URL.revokeObjectURL(lastObjectUrl);
     lastObjectUrl = null;
   }
+  if (lastPreviewImageUrl) {
+    URL.revokeObjectURL(lastPreviewImageUrl);
+    lastPreviewImageUrl = null;
+  }
+}
+
+/**
+ * Render halaman 1 PDF ke gambar penuh (A4) agar mudah di-screenshot.
+ * @param {Blob} blob
+ * @returns {Promise<boolean>} true if canvas/image preview succeeded
+ */
+async function renderFullPagePreview(blob) {
+  try {
+    const pdfjs = await import('pdfjs-dist');
+    const workerSrc = (
+      await import('pdfjs-dist/build/pdf.worker.min.mjs?url')
+    ).default;
+    pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+
+    const data = new Uint8Array(await blob.arrayBuffer());
+    const pdf = await pdfjs.getDocument({ data }).promise;
+    const page = await pdf.getPage(1);
+
+    // High-res for fullscreen lightbox + sharp preview (≈ 2× largest screen edge)
+    const targetCssWidth = Math.max(
+      window.innerWidth || 794,
+      window.innerHeight || 794,
+      1000
+    );
+    const baseViewport = page.getViewport({ scale: 1 });
+    const scale = (targetCssWidth * 2) / baseViewport.width;
+    const viewport = page.getViewport({ scale });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    const ctx = canvas.getContext('2d', { alpha: false });
+    if (!ctx) return false;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    await page.render({
+      canvasContext: ctx,
+      viewport,
+      // @ts-expect-error pdfjs types vary by version
+      canvas,
+    }).promise;
+
+    const imageBlob = await new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error('toBlob failed'))),
+        'image/png'
+      );
+    });
+
+    if (lastPreviewImageUrl) {
+      URL.revokeObjectURL(lastPreviewImageUrl);
+    }
+    lastPreviewImageUrl = URL.createObjectURL(imageBlob);
+
+    previewImage.src = lastPreviewImageUrl;
+    previewImage.hidden = false;
+    previewFrame.hidden = true;
+    previewFrame.removeAttribute('src');
+    lightboxImage.src = lastPreviewImageUrl;
+    return true;
+  } catch (err) {
+    console.warn('Full-page image preview failed, falling back to iframe', err);
+    return false;
+  }
+}
+
+function openLightbox() {
+  if (!lastPreviewImageUrl && !previewImage.src) return;
+  if (lastPreviewImageUrl) {
+    lightboxImage.src = lastPreviewImageUrl;
+  } else if (previewImage.src) {
+    lightboxImage.src = previewImage.src;
+  }
+  lightbox.hidden = false;
+  document.body.classList.add('lightbox-open');
+  lightboxClose.focus();
+
+  // Browser true fullscreen (where supported)
+  const req =
+    lightbox.requestFullscreen ||
+    // @ts-ignore vendor
+    lightbox.webkitRequestFullscreen ||
+    // @ts-ignore vendor
+    lightbox.msRequestFullscreen;
+  if (typeof req === 'function') {
+    try {
+      const p = req.call(lightbox);
+      if (p && typeof p.catch === 'function') {
+        p.catch(() => {
+          /* user gesture / policy — modal tetap full viewport */
+        });
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+function closeLightbox() {
+  lightbox.hidden = true;
+  document.body.classList.remove('lightbox-open');
+
+  const doc = document;
+  if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+    const exit =
+      doc.exitFullscreen ||
+      // @ts-ignore vendor
+      doc.webkitExitFullscreen ||
+      // @ts-ignore vendor
+      doc.msExitFullscreen;
+    if (typeof exit === 'function') {
+      try {
+        const p = exit.call(doc);
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+}
+
+/**
+ * @param {boolean} ready
+ * @param {string} [filenameLabel]
+ */
+function setPreviewReadyState(ready, filenameLabel) {
+  previewFrameWrap.classList.toggle('is-empty', !ready);
+  previewFrameWrap.disabled = !ready;
+  previewZoomBadge.hidden = !ready;
+
+  if (ready) {
+    previewFrameWrap.title = 'Buka layar penuh';
+    previewFrameWrap.setAttribute('aria-label', 'Buka preview invoice layar penuh');
+    previewFilename.textContent = filenameLabel || 'Invoice siap';
+    previewHint.textContent = PREVIEW_HINT_READY;
+  } else {
+    previewFrameWrap.title = 'Preview belum tersedia';
+    previewFrameWrap.setAttribute('aria-label', 'Preview invoice — belum tersedia');
+    previewFilename.textContent = 'Belum ada invoice';
+    previewHint.textContent = PREVIEW_HINT_EMPTY;
+  }
+}
+
+function setupLightbox() {
+  previewFrameWrap.addEventListener('click', () => {
+    if (previewFrameWrap.classList.contains('is-empty') || previewFrameWrap.disabled) {
+      return;
+    }
+    if (!lastPreviewImageUrl && previewFrame.hidden === false) {
+      // iframe fallback: buka PDF di tab baru
+      if (previewFrame.src) {
+        window.open(previewFrame.src.split('#')[0], '_blank', 'noopener');
+      }
+      return;
+    }
+    openLightbox();
+  });
+
+  lightboxClose.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeLightbox();
+  });
+
+  lightbox.addEventListener('click', (e) => {
+    // Klik area gelap di luar gambar (atau di backdrop) menutup
+    if (e.target === lightbox) {
+      closeLightbox();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !lightbox.hidden) {
+      closeLightbox();
+    }
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && !lightbox.hidden) {
+      // User keluar fullscreen via browser UI — tutup lightbox juga
+      // Jangan auto-close: biarkan modal viewport tetap; hanya sync class
+    }
+  });
 }
 
 /**
@@ -40,18 +247,31 @@ function revokePreviousUrl() {
  * @param {string} filename
  * @param {{ autoDownload?: boolean }} [opts]
  */
-function presentPdf(blob, filename, opts = {}) {
+async function presentPdf(blob, filename, opts = {}) {
   const { autoDownload = true } = opts;
   lastBlob = blob;
   lastFilename = filename;
 
-  revokePreviousUrl();
-  lastObjectUrl = URL.createObjectURL(blob);
-
-  previewFrame.src = lastObjectUrl;
-  previewFilename.textContent = filename;
-  previewSection.hidden = false;
   btnRedownload.hidden = false;
+
+  revokePreviousUrl();
+
+  const ok = await renderFullPagePreview(blob);
+  if (!ok) {
+    // Fallback: iframe PDF dengan fit halaman
+    lastObjectUrl = URL.createObjectURL(blob);
+    previewFrame.src = `${lastObjectUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`;
+    previewFrame.hidden = false;
+    previewImage.hidden = true;
+    previewImage.removeAttribute('src');
+  }
+
+  setPreviewReadyState(true, filename);
+
+  // Scroll agar preview penuh siap di-screenshot
+  requestAnimationFrame(() => {
+    previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 
   if (autoDownload) {
     triggerDownload(blob, filename);
@@ -222,6 +442,7 @@ attachMoneyFormatter(nominalInput);
 attachMoneyFormatter(hargaInput);
 setupPasteButtons();
 setupMoneyChips();
+setupLightbox();
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -243,7 +464,7 @@ form.addEventListener('submit', async (event) => {
       ...result.data,
       tanggal: now,
     });
-    presentPdf(blob, filename, { autoDownload: true });
+    await presentPdf(blob, filename, { autoDownload: true });
   } catch (err) {
     console.error(err);
     showFormError('Gagal membuat PDF. Silakan coba lagi.');
@@ -255,6 +476,42 @@ form.addEventListener('submit', async (event) => {
 btnRedownload.addEventListener('click', () => {
   if (!lastBlob || !lastFilename) return;
   triggerDownload(lastBlob, lastFilename);
+});
+
+function resetFormAll() {
+  if (!lightbox.hidden) {
+    closeLightbox();
+  }
+
+  form.reset();
+  clearFormErrors(form, formError);
+
+  form.querySelectorAll('.chip.is-active').forEach((el) => {
+    el.classList.remove('is-active');
+  });
+
+  lastBlob = null;
+  lastFilename = null;
+  revokePreviousUrl();
+
+  previewImage.hidden = true;
+  previewImage.removeAttribute('src');
+  previewFrame.hidden = true;
+  previewFrame.removeAttribute('src');
+  lightboxImage.removeAttribute('src');
+  btnRedownload.hidden = true;
+  setPreviewReadyState(false);
+
+  setGenerating(false);
+
+  const first = /** @type {HTMLInputElement | null} */ (
+    document.getElementById('idPelanggan')
+  );
+  first?.focus();
+}
+
+btnReset.addEventListener('click', () => {
+  resetFormAll();
 });
 
 window.addEventListener('beforeunload', () => {

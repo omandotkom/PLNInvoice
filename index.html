@@ -15,8 +15,15 @@
 
       <main class="main">
         <section class="card form-card" aria-labelledby="form-title">
-          <h1 id="form-title" class="card-title">Data Invoice</h1>
-          <p class="card-desc">Isi data pelanggan dan token, lalu buat invoice PDF.</p>
+          <div class="card-header-row">
+            <div class="card-header-text">
+              <h1 id="form-title" class="card-title">Data Invoice</h1>
+              <p class="card-desc">Isi data pelanggan dan token, lalu buat invoice PDF.</p>
+            </div>
+            <button type="button" class="btn btn-reset" id="btn-reset" title="Kosongkan semua isian">
+              Reset form
+            </button>
+          </div>
 
           <form id="invoice-form" novalidate>
             <div class="field">
@@ -246,24 +253,72 @@
           </form>
         </section>
 
-        <section class="card preview-card" id="preview-section" hidden aria-labelledby="preview-title">
+        <section class="card preview-card" id="preview-section" aria-labelledby="preview-title">
           <div class="preview-header">
             <h2 id="preview-title" class="card-title">Preview Invoice</h2>
-            <p class="card-desc" id="preview-filename"></p>
+            <p class="card-desc" id="preview-filename">Belum ada invoice</p>
+            <p class="field-hint" id="preview-hint">
+              Isi form lalu klik <strong>Buat Invoice</strong>. Setelah jadi, klik preview untuk layar penuh.
+            </p>
           </div>
-          <div class="preview-frame-wrap">
+          <button
+            type="button"
+            class="preview-frame-wrap preview-open-btn is-empty"
+            id="preview-frame-wrap"
+            title="Preview belum tersedia"
+            aria-label="Preview invoice — belum tersedia"
+            disabled
+          >
+            <div class="preview-placeholder" id="preview-placeholder">
+              <div class="preview-placeholder-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 48" width="48" height="48" fill="none">
+                  <rect x="10" y="4" width="28" height="40" rx="3" stroke="currentColor" stroke-width="2"/>
+                  <path d="M16 14h16M16 20h16M16 26h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <circle cx="34" cy="34" r="8" fill="var(--brand-soft)" stroke="currentColor" stroke-width="2"/>
+                  <path d="M34 30v8M30 34h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <p class="preview-placeholder-title">Preview belum tersedia</p>
+              <p class="preview-placeholder-desc">
+                Invoice akan tampil di sini setelah Anda menekan tombol Buat Invoice.
+              </p>
+            </div>
+            <img
+              id="preview-image"
+              class="preview-image"
+              alt="Preview invoice penuh"
+              hidden
+            />
             <iframe
               id="preview-frame"
               title="Preview PDF invoice"
               class="preview-frame"
+              hidden
             ></iframe>
-          </div>
+            <span class="preview-zoom-badge" id="preview-zoom-badge" hidden aria-hidden="true">Layar penuh</span>
+          </button>
         </section>
       </main>
 
       <footer class="site-footer">
         <span>Fansa Digital</span>
       </footer>
+    </div>
+
+    <!-- Fullscreen invoice lightbox -->
+    <div
+      id="invoice-lightbox"
+      class="lightbox"
+      hidden
+      role="dialog"
+      aria-modal="true"
+      aria-label="Invoice layar penuh"
+    >
+      <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Tutup">
+        ✕
+      </button>
+      <p class="lightbox-hint">Klik di luar invoice atau tekan Esc untuk menutup</p>
+      <img id="lightbox-image" class="lightbox-image" alt="Invoice layar penuh" />
     </div>
 
     <script type="module" src="/src/main.js"></script>
