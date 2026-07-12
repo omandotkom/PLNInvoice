@@ -117,42 +117,83 @@ npm run preview
 
 ---
 
-## Deploy ke Cloudflare Pages
+## Deploy ke Cloudflare
 
-### Opsi A — Connect GitHub (disarankan)
+Project ini **static site** (hasil `dist/`). Ada dua jalur deploy di Cloudflare.
 
-1. Login [Cloudflare Dashboard](https://dash.cloudflare.com/) → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**
+### Opsi A — Cloudflare Pages (paling sederhana, disarankan)
+
+1. Dashboard → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**
 2. Pilih repo `omandotkom/PLNInvoice`
-3. Isi pengaturan build:
+3. Pengaturan build:
 
 | Setting | Nilai |
 |---------|--------|
-| Framework preset | None / Vite |
+| Framework preset | **None** (atau Vite) |
 | Build command | `npm run build` |
 | Build output directory | `dist` |
 | Root directory | `/` (default) |
-| Environment | Node.js **18** / **20** / **22** |
+| **Deploy command** | **Kosongkan** (jangan isi `wrangler deploy`) |
+| Node.js | 18 / 20 / 22 |
 
 4. **Save and Deploy**
 
-### Opsi B — Direct upload
+Pages akan otomatis mengunggah isi `dist/` setelah build. **Tidak perlu** `npx wrangler deploy`.
+
+### Opsi B — Workers + Static Assets (jika build system memakai Wrangler)
+
+Repo sudah punya `wrangler.toml` yang mengarah ke `./dist`, supaya deploy **non-interaktif** di CI.
+
+| Setting | Nilai |
+|---------|--------|
+| Build command | `npm run build` |
+| Deploy command | `npx wrangler deploy` |
+| Output / assets | `dist` (via `wrangler.toml`) |
+
+File `wrangler.toml`:
+
+```toml
+name = "plninvoice"
+compatibility_date = "2025-07-12"
+
+[assets]
+directory = "./dist"
+```
+
+### Opsi C — Upload manual / CLI
 
 ```bash
 npm run build
+npx wrangler pages deploy dist --project-name=plninvoice
 ```
 
-Unggah isi folder `dist/` lewat Cloudflare Pages → **Upload assets**, atau pakai [Wrangler](https://developers.cloudflare.com/workers/wrangler/):
+### Troubleshooting: build sukses tapi deploy hang / gagal
 
-```bash
-npx wrangler pages deploy dist --project-name=pln-invoice
+Log seperti ini:
+
+```text
+Success: Build command completed
+Executing user deploy command: npx wrangler deploy
+? Do you want to modify these settings?
+Using fallback value in non-interactive context: no
 ```
+
+**Penyebab:** `wrangler deploy` dijalankan **tanpa** `wrangler.toml` (mode interaktif) di lingkungan CI.
+
+**Solusi:**
+
+1. Pastikan file **`wrangler.toml`** ada di root repo (sudah disediakan), lalu redeploy; **atau**
+2. Jika pakai **Pages klasik**: kosongkan **Deploy command**, biarkan hanya:
+   - Build: `npm run build`
+   - Output directory: `dist`
+
+Peringatan Vite *chunk > 500 kB* (pdfmake) **bukan error** — build tetap sukses.
 
 ### Catatan deploy
 
 - Tidak perlu environment secret untuk v1
 - Aplikasi bersifat **publik** (siapa pun yang punya URL bisa generate invoice)
 - HTTPS disediakan Cloudflare
-
 ---
 
 ## Cara pakai

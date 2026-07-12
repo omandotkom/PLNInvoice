@@ -1,0 +1,9 @@
+# Cloudflare Workers Static Assets (non-interactive deploy)
+# Build: npm run build → output dist/
+# Deploy: npx wrangler deploy
+
+name = "plninvoice"
+compatibility_date = "2025-07-12"
+
+[assets]
+directory = "./dist"
