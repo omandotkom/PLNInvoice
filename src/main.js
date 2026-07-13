@@ -389,6 +389,45 @@ function setupPasteButtons() {
 }
 
 /**
+ * Clear a single field value, its error, and related chip highlight.
+ * @param {string} targetId
+ */
+function clearFieldById(targetId) {
+  const input = /** @type {HTMLInputElement | null} */ (
+    document.getElementById(targetId)
+  );
+  if (!input) return;
+
+  input.value = '';
+  input.classList.remove('is-invalid');
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+
+  const errorEl = document.getElementById(`error-${targetId}`);
+  if (errorEl) {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  // Also clear invalid style on money prefix wrapper if any
+  if (targetId === 'nominal' || targetId === 'harga') {
+    syncChipActiveState(targetId);
+  }
+
+  input.focus();
+}
+
+function setupClearButtons() {
+  form.querySelectorAll('.btn-clear').forEach((el) => {
+    const btn = /** @type {HTMLButtonElement} */ (el);
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-clear-target');
+      if (!targetId) return;
+      clearFieldById(targetId);
+    });
+  });
+}
+
+/**
  * Apply money value to input and keep chip highlight in sync.
  * @param {HTMLInputElement} input
  * @param {number|string} value
@@ -441,6 +480,7 @@ function setupMoneyChips() {
 attachMoneyFormatter(nominalInput);
 attachMoneyFormatter(hargaInput);
 setupPasteButtons();
+setupClearButtons();
 setupMoneyChips();
 setupLightbox();
 
